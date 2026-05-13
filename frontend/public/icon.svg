@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#0d0d1a"/>
+  <!-- Aura glow ring -->
+  <circle cx="256" cy="220" r="110" fill="none" stroke="#7c3aed" stroke-width="8" opacity="0.4"/>
+  <circle cx="256" cy="220" r="85"  fill="none" stroke="#a855f7" stroke-width="6" opacity="0.6"/>
+  <!-- Bulb body -->
+  <path d="M210 220 Q200 270 215 300 L297 300 Q312 270 302 220 Q290 170 256 165 Q222 170 210 220Z"
+        fill="url(#bulbGrad)"/>
+  <!-- Bulb base -->
+  <rect x="225" y="300" width="62" height="14" rx="4" fill="#6d28d9"/>
+  <rect x="230" y="314" width="52" height="12" rx="4" fill="#5b21b6"/>
+  <rect x="235" y="326" width="42" height="10" rx="4" fill="#4c1d95"/>
+  <!-- Inner light -->
+  <ellipse cx="256" cy="235" rx="38" ry="45" fill="url(#innerGlow)" opacity="0.7"/>
+  <!-- Shine -->
+  <ellipse cx="238" cy="198" rx="12" ry="18" fill="white" opacity="0.15" transform="rotate(-20 238 198)"/>
+  <defs>
+    <linearGradient id="bulbGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="#c084fc"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <radialGradient id="innerGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#f0abfc"/>
+      <stop offset="100%" stop-color="#a855f7" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>
