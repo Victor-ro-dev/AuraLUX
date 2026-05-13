@@ -1,0 +1,68 @@
+/* ═══════════════════════════════════════════════
+   AuraLUX - Global Styles
+   Tema: Sci-fi escuro com acentos ciano
+   ═══════════════════════════════════════════════ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --cyan: #00e5ff;
+    --cyan-dim: #00b8d4;
+    --cyan-glow: rgba(0, 229, 255, 0.25);
+    --bg-dark: #070d1a;
+    --bg-card: rgba(0, 229, 255, 0.04);
+    --bg-input: rgba(0, 229, 255, 0.06);
+    --border: rgba(0, 229, 255, 0.18);
+    --border-hover: rgba(0, 229, 255, 0.4);
+    --text-primary: #d0e8ff;
+    --text-secondary: #6080a0;
+    --text-dim: #405060;
+    --danger: #ff4d6d;
+    --success: #00e676;
+    --warning: #ffb300;
+}
+
+body {
+    font-family: 'Rajdhani', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--cyan-dim);
+    border-radius: 2px;
+}
+
+/* Seleção de texto */
+::selection {
+    background: var(--cyan-glow);
+    color: var(--cyan);
+}
+
+/* ───── Utilitários ───── */
+.text-cyan {
+    color: var(--cyan);
+}
+
+.text-dim {
+    color: var(--text-secondary);
+}
+
+.font-orb {
+    font-family: 'Orbitron', monospace;
+}
