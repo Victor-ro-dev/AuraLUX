@@ -1,15 +1,17 @@
 /**
  * Configuração Microsoft Authentication Library (MSAL)
  * ──────────────────────────────────────────────────────
- * Substitua CLIENT_ID e TENANT_ID pelos valores do seu app no Azure Portal.
+ * Os valores são lidos de variáveis de ambiente (arquivo .env).
+ * Copie .env.example para .env e preencha VITE_OUTLOOK_CLIENT_ID e
+ * VITE_OUTLOOK_REDIRECT_URI com os dados do seu app no Azure Portal.
  * https://portal.azure.com → App registrations
  */
 
 export const msalConfig = {
   auth: {
-    clientId: "00000003-0000-0000-c000-000000000000", // Application (client) ID
-    authority: "https://login.microsoftonline.com/common",
-    redirectUri: "http://localhost:5173",
+    clientId: import.meta.env.VITE_OUTLOOK_CLIENT_ID,
+    authority: "https://login.microsoftonline.com/common", // multi-tenant (contas pessoais + empresariais)
+    redirectUri: import.meta.env.VITE_OUTLOOK_REDIRECT_URI,
   },
   cache: {
     cacheLocation: "sessionStorage",

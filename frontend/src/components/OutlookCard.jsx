@@ -13,8 +13,11 @@ export default function OutlookCard() {
   } = useOutlook();
 
   useEffect(() => {
-    if (isConnected) fetchEvents();
-  }, [isConnected]);
+    if (isConnected) {
+      console.log("[OutlookCard] Conectado ao Outlook, buscando eventos...");
+      fetchEvents();
+    }
+  }, [isConnected, fetchEvents]);
 
   const handleConnect = async () => {
     const token = await connect();

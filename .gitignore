@@ -26,8 +26,16 @@ lib64/
 venv/
 env/
 ENV/
+
+# Variáveis de ambiente (nunca commitar!)
 .env
+.env.local
+.env.*.local
 !.env.example
+
+# Banco de dados SQLite
+*.db
+*.sqlite3
 
 # pytest / coverage
 .pytest_cache/
@@ -45,7 +53,6 @@ coverage.xml
 node_modules/
 dist/
 dist-ssr/
-*.local
 
 # Logs
 npm-debug.log*
@@ -53,8 +60,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Editor
-.vscode/
+# ========================
+# Editor (apenas arquivos pessoais)
+# ========================
+.vscode/*.code-workspace
 .idea/
 *.suo
 *.ntvs*

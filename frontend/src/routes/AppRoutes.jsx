@@ -3,6 +3,7 @@ import Login from "../pages/Login";
 import Register from "../pages/Register";
 import Form from "../pages/Form";
 import Dashboard from "../pages/Dashboard";
+import OAuthCallback from "../pages/OAuthCallback";
 import PrivateRoute from "./PrivateRoute";
 
 export default function AppRoutes() {
@@ -11,6 +12,7 @@ export default function AppRoutes() {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/auth/outlook/callback" element={<OAuthCallback />} />
 
       {/* Rotas protegidas */}
       <Route

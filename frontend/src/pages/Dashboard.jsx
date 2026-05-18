@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useLight } from "../hooks/useLight";
 import { getPresets } from "../services/lightApi";
 import OutlookCard from "../components/OutlookCard";
+import axios from "axios";
 import "../styles/Dashboard.css";
 
 const CHRONOTYPE_LABELS = {
@@ -31,6 +32,15 @@ export default function Dashboard() {
   const [presets, setPresets] = useState([]);
   const [activePreset, setActivePreset] = useState(null);
   const [mode, setMode] = useState("auto"); // 'auto' | 'manual'
+
+  // Estado para simulação 24h
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [timeline, setTimeline] = useState(null);
+  const [currentTimelineIndex, setCurrentTimelineIndex] = useState(0);
+  const [simulationProgress, setSimulationProgress] = useState(0);
+  const [chronotypeSimulation, setChronotypeSimulation] = useState(
+    user?.chronotype || "morning",
+  );
 
   useEffect(() => {
     fetchHistory();
@@ -84,13 +94,70 @@ export default function Dashboard() {
     fetchHistory();
   };
 
-  const displayLight = currentLight || {
-    r: rgb.r,
-    g: rgb.g,
-    b: rgb.b,
-    label: "—",
-    triggered_by: "manual",
+  // Simulação 24h
+  const startSimulation = async () => {
+    setIsSimulating(true);
+    try {
+      const response = await axios.get("/api/calendar/simulate-timeline", {
+        params: {
+          chronotype: chronotypeSimulation,
+          snapshots: 24,
+        },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("auralux_token")}`,
+        },
+      });
+      setTimeline(response.data);
+      setCurrentTimelineIndex(0);
+      setSimulationProgress(0);
+    } catch (error) {
+      console.error("Erro ao carregar timeline:", error);
+      setIsSimulating(false);
+    }
   };
+
+  useEffect(() => {
+    if (!isSimulating || !timeline) return;
+
+    const duration = timeline.duration_seconds * 1000;
+    const snapshots = timeline.timeline.length;
+    const intervalMs = duration / snapshots;
+
+    const interval = setInterval(() => {
+      setCurrentTimelineIndex((prev) => {
+        if (prev >= snapshots - 1) {
+          setIsSimulating(false);
+          return snapshots - 1;
+        }
+        return prev + 1;
+      });
+      setSimulationProgress((prev) => Math.min(prev + 100 / snapshots, 100));
+    }, intervalMs);
+
+    return () => clearInterval(interval);
+  }, [isSimulating, timeline]);
+
+  const currentTimelineFrame = timeline?.timeline[currentTimelineIndex];
+
+  const displayLight =
+    isSimulating && currentTimelineFrame
+      ? {
+          r: currentTimelineFrame.color.r,
+          g: currentTimelineFrame.color.g,
+          b: currentTimelineFrame.color.b,
+          label: currentTimelineFrame.color.label,
+          triggered_by: currentTimelineFrame.triggered_by,
+          cct: currentTimelineFrame.color.cct,
+          event_type: currentTimelineFrame.event_type,
+          time: currentTimelineFrame.time,
+        }
+      : currentLight || {
+          r: rgb.r,
+          g: rgb.g,
+          b: rgb.b,
+          label: "—",
+          triggered_by: "manual",
+        };
   const lightBg = `rgb(${displayLight.r}, ${displayLight.g}, ${displayLight.b})`;
 
   return (
@@ -98,7 +165,52 @@ export default function Dashboard() {
       {/* Header */}
       <div className="dash-header">
         <div className="dash-brand">AuraLUX</div>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          {/* Toggle Simulação 24h */}
+          <button
+            style={{
+              padding: "8px 16px",
+              backgroundColor: isSimulating ? "#ff6b6b" : "#4a9eff",
+              color: "#000",
+              border: "none",
+              borderRadius: "6px",
+              fontWeight: "bold",
+              cursor: "pointer",
+              fontSize: "13px",
+              transition: "all 0.2s",
+            }}
+            onClick={() => {
+              if (isSimulating) {
+                setIsSimulating(false);
+              } else {
+                startSimulation();
+              }
+            }}
+          >
+            {isSimulating ? "⏸️ Parar Simulação" : "▶️ Simular 24h"}
+          </button>
+
+          {/* Seletor de Cronotipo para Simulação */}
+          {isSimulating && (
+            <select
+              value={chronotypeSimulation}
+              onChange={(e) => setChronotypeSimulation(e.target.value)}
+              disabled={isSimulating}
+              style={{
+                padding: "6px 10px",
+                backgroundColor: "#2a2a2a",
+                color: "#fff",
+                border: "1px solid #444",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "12px",
+              }}
+            >
+              <option value="morning">Matutino</option>
+              <option value="evening">Vespertino</option>
+            </select>
+          )}
+
           <div className="dash-user-info">
             <span className="dash-user-name">{user?.name}</span>
             <span className="dash-user-type">
@@ -114,7 +226,47 @@ export default function Dashboard() {
       <div className="dash-grid">
         {/* Card: Status da Luz */}
         <div className="dash-card">
-          <div className="dash-card-title">Estado Atual</div>
+          <div className="dash-card-title">
+            {isSimulating ? "🕐 Simulação 24h em Progresso" : "Estado Atual"}
+          </div>
+
+          {/* Progresso da Simulação */}
+          {isSimulating && (
+            <div
+              style={{
+                width: "100%",
+                height: "6px",
+                backgroundColor: "#2a2a2a",
+                borderRadius: "3px",
+                overflow: "hidden",
+                marginBottom: "1rem",
+              }}
+            >
+              <div
+                style={{
+                  height: "100%",
+                  backgroundColor: "#4a9eff",
+                  width: `${simulationProgress}%`,
+                  transition: "width 0.1s linear",
+                }}
+              />
+            </div>
+          )}
+
+          {/* Hora da Simulação */}
+          {isSimulating && displayLight.time && (
+            <div
+              style={{
+                fontSize: "20px",
+                fontWeight: "bold",
+                color: "#4a9eff",
+                marginBottom: "1rem",
+                textAlign: "center",
+              }}
+            >
+              {displayLight.time}
+            </div>
+          )}
 
           <div
             className="light-preview"
@@ -130,10 +282,40 @@ export default function Dashboard() {
             <span>B:{displayLight.b}</span>
           </div>
 
+          {/* Info da Simulação */}
+          {isSimulating && displayLight.cct && (
+            <div
+              style={{
+                marginTop: "0.8rem",
+                padding: "0.8rem",
+                backgroundColor: "#2a2a2a",
+                borderRadius: "6px",
+                fontSize: "12px",
+                color: "#aaa",
+              }}
+            >
+              <div style={{ marginBottom: "0.4rem" }}>
+                🌡️ CCT: <strong>{displayLight.cct}K</strong>
+              </div>
+              <div>
+                📅 Evento:{" "}
+                <strong>
+                  {displayLight.event_type
+                    ? displayLight.event_type.toUpperCase()
+                    : "—"}
+                </strong>
+              </div>
+            </div>
+          )}
+
           <div style={{ marginTop: "1rem" }}>
             <div className="phase-badge">
               <span className="phase-dot" />
-              {mode === "auto" ? "Automático" : "Manual"}
+              {isSimulating
+                ? "Simulação"
+                : mode === "auto"
+                  ? "Automático"
+                  : "Manual"}
             </div>
           </div>
 
@@ -159,6 +341,7 @@ export default function Dashboard() {
               max={100}
               value={brightness}
               onChange={handleBrightnessChange}
+              disabled={isSimulating}
             />
           </div>
         </div>
@@ -170,7 +353,11 @@ export default function Dashboard() {
           <button
             className="auto-btn"
             onClick={handleAutoLight}
-            disabled={loading}
+            disabled={loading || isSimulating}
+            style={{
+              opacity: isSimulating ? 0.5 : 1,
+              cursor: isSimulating ? "not-allowed" : "pointer",
+            }}
           >
             ◎ Aplicar Luz Automática (Cronotipo)
           </button>
@@ -188,6 +375,7 @@ export default function Dashboard() {
                 max={255}
                 value={rgb.r}
                 onChange={(e) => handleRgbChange("r", e.target.value)}
+                disabled={isSimulating}
               />
             </div>
             <div className="slider-row">
@@ -202,6 +390,7 @@ export default function Dashboard() {
                 max={255}
                 value={rgb.g}
                 onChange={(e) => handleRgbChange("g", e.target.value)}
+                disabled={isSimulating}
               />
             </div>
             <div className="slider-row">
@@ -216,6 +405,7 @@ export default function Dashboard() {
                 max={255}
                 value={rgb.b}
                 onChange={(e) => handleRgbChange("b", e.target.value)}
+                disabled={isSimulating}
               />
             </div>
           </div>
@@ -224,12 +414,19 @@ export default function Dashboard() {
         {/* Card: Presets */}
         <div className="dash-card">
           <div className="dash-card-title">Presets Circadianos</div>
-          <div className="presets-grid">
+          <div
+            className="presets-grid"
+            style={{
+              opacity: isSimulating ? 0.5 : 1,
+              pointerEvents: isSimulating ? "none" : "auto",
+            }}
+          >
             {presets.map((p) => (
               <button
                 key={p.key}
                 className={`preset-btn ${activePreset === p.key ? "active" : ""}`}
                 onClick={() => handlePreset(p)}
+                disabled={isSimulating}
               >
                 <div
                   className="preset-color-dot"

@@ -1,88 +1,102 @@
 import { useState, useCallback } from "react";
-import { PublicClientApplication } from "@azure/msal-browser";
-import { msalConfig, calendarScopes } from "../services/msalConfig";
 import { useAuth } from "../contexts/AuthContext";
+import { generatePKCE, storePKCE } from "../utils/pkce";
 import axios from "axios";
-
-const msalInstance = new PublicClientApplication(msalConfig);
-await msalInstance.initialize();
 
 export function useOutlook() {
   const { user } = useAuth();
-  const [outlookToken, setOutlookToken] = useState(
-    sessionStorage.getItem("outlook_token") || null,
+  const [connected, setConnected] = useState(
+    () => localStorage.getItem("outlook_connected") === "true",
   );
   const [syncing, setSyncing] = useState(false);
   const [events, setEvents] = useState([]);
 
+  const authHeaders = { Authorization: `Bearer ${user?.token}` };
+
+  /** Redireciona o usuário para o login Microsoft (Authorization Code Flow com PKCE). */
   const connect = useCallback(async () => {
     try {
-      const result = await msalInstance.loginPopup(calendarScopes);
-      const token = result.accessToken;
-      sessionStorage.setItem("outlook_token", token);
-      setOutlookToken(token);
-      return token;
+      // 1. Gerar PKCE (Proof Key for Code Exchange)
+      const pkce = await generatePKCE();
+      console.log("[useOutlook] PKCE gerado:", {
+        verifier: pkce.codeVerifier.substring(0, 10) + "...",
+        challenge: pkce.codeChallenge,
+      });
+      storePKCE(pkce);
+
+      // 2. Guardar token JWT em localStorage para a nova aba acessar
+      localStorage.setItem("outlook_auth_token", user.token);
+      console.log("[useOutlook] Token guardado em localStorage para callback");
+
+      // 3. Obter URL de autorização com code_challenge
+      const { data } = await axios.get("/api/auth/outlook/url", {
+        headers: authHeaders,
+        params: { code_challenge: pkce.codeChallenge },
+      });
+      console.log("URL de autorização Microsoft:", data.url);
+      window.open(data.url, "_blank");
     } catch (err) {
-      console.error("Falha ao conectar Outlook:", err);
-      return null;
+      console.error("Erro ao obter URL de autorização:", err);
     }
-  }, []);
+  }, [user?.token]);
 
-  const disconnect = useCallback(() => {
-    sessionStorage.removeItem("outlook_token");
-    setOutlookToken(null);
+  /** Remove os tokens do banco e atualiza o estado local. */
+  const disconnect = useCallback(async () => {
+    await axios.delete("/api/auth/outlook/disconnect", {
+      headers: authHeaders,
+    });
+    localStorage.removeItem("outlook_connected");
+    setConnected(false);
     setEvents([]);
+  }, [user?.token]);
+
+  /** Marca a conexão como estabelecida (chamado pelo OAuthCallback). */
+  const markConnected = useCallback(() => {
+    localStorage.setItem("outlook_connected", "true");
+    setConnected(true);
   }, []);
 
-  const fetchEvents = useCallback(
-    async (token = outlookToken) => {
-      if (!token) return [];
-      try {
-        const { data } = await axios.get("/api/calendar/events", {
-          headers: {
-            Authorization: `Bearer ${user?.token}`,
-            "X-Outlook-Token": token,
-          },
-        });
-        setEvents(data.events || []);
-        return data.events || [];
-      } catch (err) {
-        console.error("Erro ao buscar eventos:", err);
-        return [];
-      }
-    },
-    [outlookToken, user?.token],
-  );
+  /** Busca os eventos do calendário do usuário logado. */
+  const fetchEvents = useCallback(async () => {
+    try {
+      console.log("[useOutlook] Buscando eventos...");
+      const { data } = await axios.get("/api/calendar/events", {
+        headers: authHeaders,
+      });
+      console.log("[useOutlook] ✓ Eventos recebidos:", data.events);
+      setEvents(data.events || []);
+      return data.events || [];
+    } catch (err) {
+      console.error(
+        "[useOutlook] ✗ Erro ao buscar eventos:",
+        err.response?.data || err.message,
+      );
+      return [];
+    }
+  }, [user?.token]);
 
-  const syncLight = useCallback(
-    async (token = outlookToken) => {
-      if (!token) return null;
-      setSyncing(true);
-      try {
-        const { data } = await axios.post("/api/calendar/sync-light", null, {
-          headers: {
-            Authorization: `Bearer ${user?.token}`,
-            "X-Outlook-Token": token,
-          },
-        });
-        return data;
-      } catch (err) {
-        console.error("Erro ao sincronizar luz:", err);
-        return null;
-      } finally {
-        setSyncing(false);
-      }
-    },
-    [outlookToken, user?.token],
-  );
+  /** Sincroniza a iluminação com o evento atual do Outlook. */
+  const syncLight = useCallback(async () => {
+    setSyncing(true);
+    try {
+      const { data } = await axios.post("/api/calendar/sync-light", null, {
+        headers: authHeaders,
+      });
+      return data;
+    } catch {
+      return null;
+    } finally {
+      setSyncing(false);
+    }
+  }, [user?.token]);
 
   return {
-    outlookToken,
-    isConnected: !!outlookToken,
+    isConnected: connected,
     syncing,
     events,
     connect,
     disconnect,
+    markConnected,
     fetchEvents,
     syncLight,
   };
