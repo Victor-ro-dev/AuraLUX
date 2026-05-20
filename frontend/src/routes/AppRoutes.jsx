@@ -4,6 +4,7 @@ import Register from "../pages/Register";
 import Form from "../pages/Form";
 import Dashboard from "../pages/Dashboard";
 import OAuthCallback from "../pages/OAuthCallback";
+import SciencePresets from "../pages/SciencePresets";
 import PrivateRoute from "./PrivateRoute";
 
 export default function AppRoutes() {
@@ -13,6 +14,7 @@ export default function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/auth/outlook/callback" element={<OAuthCallback />} />
+      <Route path="/science/presets" element={<SciencePresets />} />
 
       {/* Rotas protegidas */}
       <Route

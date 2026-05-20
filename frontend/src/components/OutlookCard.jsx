@@ -61,6 +61,7 @@ export default function OutlookCard() {
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
+              gap: "1rem",
               marginBottom: "1rem",
             }}
           >
@@ -77,6 +78,7 @@ export default function OutlookCard() {
                 fontSize: "0.72rem",
                 letterSpacing: "1px",
                 cursor: "pointer",
+                marginLeft: "auto",
               }}
             >
               Desconectar

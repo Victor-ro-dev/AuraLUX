@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useLight } from "../hooks/useLight";
 import { getPresets } from "../services/lightApi";
@@ -348,72 +348,208 @@ export default function Dashboard() {
 
         {/* Card: Controle Manual */}
         <div className="dash-card">
-          <div className="dash-card-title">Controle Manual</div>
+          <div className="dash-card-title">Controle de Luz</div>
 
-          <button
-            className="auto-btn"
-            onClick={handleAutoLight}
-            disabled={loading || isSimulating}
+          {/* Mode Toggle */}
+          <div
             style={{
-              opacity: isSimulating ? 0.5 : 1,
-              cursor: isSimulating ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "1rem",
+              marginBottom: "1rem",
             }}
           >
-            ◎ Aplicar Luz Automática (Cronotipo)
-          </button>
-
-          <div className="slider-group">
-            <div className="slider-row">
-              <div className="slider-label-row">
-                <span>Vermelho</span>
-                <span className="slider-value">{rgb.r}</span>
-              </div>
-              <input
-                type="range"
-                className="r-slider"
-                min={0}
-                max={255}
-                value={rgb.r}
-                onChange={(e) => handleRgbChange("r", e.target.value)}
+            <span
+              style={{
+                fontSize: "0.65rem",
+                letterSpacing: "2px",
+                color: "var(--text-secondary)",
+                textTransform: "uppercase",
+              }}
+            >
+              Modo
+            </span>
+            <div style={{ display: "flex", gap: "0.4rem" }}>
+              <button
+                onClick={() => {
+                  if (mode !== "auto") handleAutoLight();
+                }}
                 disabled={isSimulating}
-              />
-            </div>
-            <div className="slider-row">
-              <div className="slider-label-row">
-                <span>Verde</span>
-                <span className="slider-value">{rgb.g}</span>
-              </div>
-              <input
-                type="range"
-                className="g-slider"
-                min={0}
-                max={255}
-                value={rgb.g}
-                onChange={(e) => handleRgbChange("g", e.target.value)}
+                style={{
+                  padding: "0.4rem 0.8rem",
+                  fontSize: "0.65rem",
+                  letterSpacing: "1px",
+                  fontWeight: "600",
+                  fontFamily: "'Orbitron', monospace",
+                  border:
+                    mode === "auto"
+                      ? "1px solid var(--cyan)"
+                      : "1px solid var(--border)",
+                  backgroundColor:
+                    mode === "auto" ? "rgba(0, 229, 255, 0.15)" : "transparent",
+                  color: mode === "auto" ? "var(--cyan)" : "var(--text-dim)",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                }}
+              >
+                AUTO
+              </button>
+              <button
+                onClick={() => setMode("manual")}
                 disabled={isSimulating}
-              />
-            </div>
-            <div className="slider-row">
-              <div className="slider-label-row">
-                <span>Azul</span>
-                <span className="slider-value">{rgb.b}</span>
-              </div>
-              <input
-                type="range"
-                className="b-slider"
-                min={0}
-                max={255}
-                value={rgb.b}
-                onChange={(e) => handleRgbChange("b", e.target.value)}
-                disabled={isSimulating}
-              />
+                style={{
+                  padding: "0.4rem 0.8rem",
+                  fontSize: "0.65rem",
+                  letterSpacing: "1px",
+                  fontWeight: "600",
+                  fontFamily: "'Orbitron', monospace",
+                  border:
+                    mode === "manual"
+                      ? "1px solid #ff6464"
+                      : "1px solid var(--border)",
+                  backgroundColor:
+                    mode === "manual"
+                      ? "rgba(255, 100, 100, 0.15)"
+                      : "transparent",
+                  color: mode === "manual" ? "#ff6464" : "var(--text-dim)",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                }}
+              >
+                MANUAL
+              </button>
             </div>
           </div>
+
+          {/* Automático */}
+          {mode === "auto" && (
+            <button
+              className="auto-btn"
+              onClick={handleAutoLight}
+              disabled={loading || isSimulating}
+              style={{
+                marginTop: "0.5rem",
+                opacity: isSimulating ? 0.5 : 1,
+                cursor: isSimulating ? "not-allowed" : "pointer",
+              }}
+            >
+              ◎ Aplicar Luz Automática (Cronotipo)
+            </button>
+          )}
+
+          {/* Manual Controls */}
+          {mode === "manual" && (
+            <>
+              <p
+                style={{
+                  fontSize: "0.75rem",
+                  color: "var(--text-dim)",
+                  marginTop: "0.5rem",
+                  marginBottom: "0.7rem",
+                  letterSpacing: "1px",
+                }}
+              >
+                Ajuste os valores de cor manualmente
+              </p>
+              <div className="slider-group">
+                <div className="slider-row">
+                  <div className="slider-label-row">
+                    <span>Vermelho</span>
+                    <span className="slider-value">{rgb.r}</span>
+                  </div>
+                  <input
+                    type="range"
+                    className="r-slider"
+                    min={0}
+                    max={255}
+                    value={rgb.r}
+                    onChange={(e) => handleRgbChange("r", e.target.value)}
+                    disabled={isSimulating}
+                  />
+                </div>
+                <div className="slider-row">
+                  <div className="slider-label-row">
+                    <span>Verde</span>
+                    <span className="slider-value">{rgb.g}</span>
+                  </div>
+                  <input
+                    type="range"
+                    className="g-slider"
+                    min={0}
+                    max={255}
+                    value={rgb.g}
+                    onChange={(e) => handleRgbChange("g", e.target.value)}
+                    disabled={isSimulating}
+                  />
+                </div>
+                <div className="slider-row">
+                  <div className="slider-label-row">
+                    <span>Azul</span>
+                    <span className="slider-value">{rgb.b}</span>
+                  </div>
+                  <input
+                    type="range"
+                    className="b-slider"
+                    min={0}
+                    max={255}
+                    value={rgb.b}
+                    onChange={(e) => handleRgbChange("b", e.target.value)}
+                    disabled={isSimulating}
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Card: Presets */}
         <div className="dash-card">
-          <div className="dash-card-title">Presets Circadianos</div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: "0.9rem",
+            }}
+          >
+            <div className="dash-card-title" style={{ margin: 0 }}>
+              Presets Circadianos
+            </div>
+            <Link
+              to="/science/presets"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "24px",
+                height: "24px",
+                borderRadius: "50%",
+                background: "rgba(0, 229, 255, 0.1)",
+                border: "1px solid var(--cyan-dim)",
+                color: "var(--cyan)",
+                textDecoration: "none",
+                cursor: "pointer",
+                fontSize: "14px",
+                fontWeight: "bold",
+                transition: "all 0.3s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = "rgba(0, 229, 255, 0.2)";
+                e.target.style.boxShadow = "0 0 12px rgba(0, 229, 255, 0.3)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = "rgba(0, 229, 255, 0.1)";
+                e.target.style.boxShadow = "none";
+              }}
+              title="Validação científica dos presets"
+            >
+              i
+            </Link>
+          </div>
           <div
             className="presets-grid"
             style={{
