@@ -1,26 +1,24 @@
-import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.api.routes import auth_routes, user_routes, light_routes, calendar_routes
 from src.api.routes import outlook_routes
 from src.core.settings.database import engine, Base
 from src.services.scheduler_service import get_scheduler
+from src.core.config import settings
 
 # Nota: Tabelas são criadas via Alembic migrations, não aqui
 # Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="AuraLUX API",
-    version="1.0.0",
-    description="Smart Luminary — Ciclo Circadiano & Produtividade",
+    title=settings.API_TITLE,
+    version=settings.API_VERSION,
+    description=settings.API_DESCRIPTION,
+    debug=settings.DEBUG,
 )
-
-_cors_env = os.getenv("CORS_ORIGINS", "http://localhost:5173")
-allowed_origins = [origin.strip() for origin in _cors_env.split(",")]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=[origin.strip() for origin in settings.CORS_ORIGINS.split(",")],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

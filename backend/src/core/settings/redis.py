@@ -1,11 +1,5 @@
-import os
 from redis import Redis
-
-# Configuração do Redis via variáveis de ambiente
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
-REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", None)
-REDIS_DB = int(os.getenv("REDIS_DB", 0))
+from src.core.config import settings
 
 # Função para criar conexão com Redis
 def get_redis_client() -> Redis:
@@ -16,10 +10,10 @@ def get_redis_client() -> Redis:
         Redis: Cliente Redis conectado
     """
     return Redis(
-        host=REDIS_HOST,
-        port=REDIS_PORT,
-        password=REDIS_PASSWORD if REDIS_PASSWORD else None,
-        db=REDIS_DB,
+        host=settings.REDIS_HOST,
+        port=settings.REDIS_PORT,
+        password=settings.REDIS_PASSWORD if settings.REDIS_PASSWORD else None,
+        db=settings.REDIS_DB,
         decode_responses=True,
     )
 

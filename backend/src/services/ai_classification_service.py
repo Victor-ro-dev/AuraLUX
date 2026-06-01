@@ -31,7 +31,8 @@ class AIClassificationService:
 
     def __init__(self):
         """Inicializa o serviço com Gemini."""
-        self.api_key = os.getenv("GEMINI_API_KEY")
+        from src.core.config import settings
+        self.api_key = settings.GEMINI_API_KEY
         self.use_gemini = bool(self.api_key)
         
         if self.use_gemini:

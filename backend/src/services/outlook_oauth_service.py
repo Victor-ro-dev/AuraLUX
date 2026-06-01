@@ -7,7 +7,6 @@ Responsável por:
   3. Renovar o access_token via refresh_token quando necessário.
 """
 
-import os
 import requests
 from datetime import datetime, timedelta
 from typing import Optional
@@ -15,12 +14,12 @@ from sqlalchemy.orm import Session
 
 from src.core.entities.user import User
 from src.core.repositories.user_repository import UserRepository
+from src.core.config import settings
 
-CLIENT_ID = os.getenv("OUTLOOK_CLIENT_ID")
-CLIENT_SECRET = os.getenv("OUTLOOK_CLIENT_SECRET")
-TENANT_ID = os.getenv("OUTLOOK_TENANT_ID", "common")  # "common" para multi-tenant
-# Redirect URI configurável via env (útil para produção)
-REDIRECT_URI = os.getenv("OUTLOOK_REDIRECT_URI", "http://localhost:5173/auth/outlook/callback")
+CLIENT_ID = settings.OUTLOOK_CLIENT_ID
+CLIENT_SECRET = settings.OUTLOOK_CLIENT_SECRET
+TENANT_ID = settings.OUTLOOK_TENANT_ID
+REDIRECT_URI = settings.OUTLOOK_REDIRECT_URI
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0"
 SCOPES = "openid profile User.Read Calendars.Read offline_access"
 

@@ -1,15 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
-import os
-from dotenv import load_dotenv
+from src.core.config import settings
 
-load_dotenv()
+connect_args = {"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {}
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./auralux.db")
-
-connect_args = {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
-
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
+engine = create_engine(settings.DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
