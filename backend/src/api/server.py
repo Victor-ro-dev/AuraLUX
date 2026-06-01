@@ -6,8 +6,8 @@ from src.api.routes import outlook_routes
 from src.core.settings.database import engine, Base
 from src.services.scheduler_service import get_scheduler
 
-# Cria as tabelas no banco ao iniciar
-Base.metadata.create_all(bind=engine)
+# Nota: Tabelas são criadas via Alembic migrations, não aqui
+# Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="AuraLUX API",
