@@ -3,9 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { generatePKCE, storePKCE } from "../utils/pkce";
 import axios from "axios";
 
-const BASE = import.meta.env.VITE_API_URL
-  ? import.meta.env.VITE_API_URL
-  : "";
+const BASE = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL : "";
 
 export function useOutlook() {
   const { user } = useAuth();
@@ -83,9 +81,13 @@ export function useOutlook() {
   const syncLight = useCallback(async () => {
     setSyncing(true);
     try {
-      const { data } = await axios.post(`${BASE}/api/calendar/sync-light`, null, {
-        headers: authHeaders,
-      });
+      const { data } = await axios.post(
+        `${BASE}/api/calendar/sync-light`,
+        null,
+        {
+          headers: authHeaders,
+        },
+      );
       return data;
     } catch {
       return null;

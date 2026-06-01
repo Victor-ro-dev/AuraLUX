@@ -131,15 +131,18 @@ export default function Dashboard() {
   const startSimulation = async () => {
     setIsSimulating(true);
     try {
-      const response = await axios.get(`${BASE}/api/calendar/simulate-timeline`, {
-        params: {
-          chronotype: chronotypeSimulation,
-          snapshots: 24,
+      const response = await axios.get(
+        `${BASE}/api/calendar/simulate-timeline`,
+        {
+          params: {
+            chronotype: chronotypeSimulation,
+            snapshots: 24,
+          },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("auralux_token")}`,
+          },
         },
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("auralux_token")}`,
-        },
-      });
+      );
       setTimeline(response.data);
       setCurrentTimelineIndex(0);
       setSimulationProgress(0);

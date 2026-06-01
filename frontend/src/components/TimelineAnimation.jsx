@@ -14,15 +14,18 @@ export default function TimelineAnimation() {
   const startAnimation = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${BASE}/api/calendar/simulate-timeline`, {
-        params: {
-          chronotype: chronotype,
-          snapshots: 24,
+      const response = await axios.get(
+        `${BASE}/api/calendar/simulate-timeline`,
+        {
+          params: {
+            chronotype: chronotype,
+            snapshots: 24,
+          },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("auralux_token")}`,
+          },
         },
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("auralux_token")}`,
-        },
-      });
+      );
       setTimeline(response.data);
       setIsPlaying(true);
       setCurrentIndex(0);
