@@ -19,7 +19,8 @@ from src.core.repositories.user_repository import UserRepository
 CLIENT_ID = os.getenv("OUTLOOK_CLIENT_ID")
 CLIENT_SECRET = os.getenv("OUTLOOK_CLIENT_SECRET")
 TENANT_ID = os.getenv("OUTLOOK_TENANT_ID", "common")  # "common" para multi-tenant
-REDIRECT_URI = "http://localhost:5173/auth/outlook/callback"
+# Redirect URI configurável via env (útil para produção)
+REDIRECT_URI = os.getenv("OUTLOOK_REDIRECT_URI", "http://localhost:5173/auth/outlook/callback")
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0"
 SCOPES = "openid profile User.Read Calendars.Read offline_access"
 
