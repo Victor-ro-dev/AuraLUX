@@ -5,6 +5,8 @@ import { useOutlook } from "../hooks/useOutlook";
 import { getPKCEVerifier, clearPKCE } from "../utils/pkce";
 import axios from "axios";
 
+const BASE = import.meta.env.VITE_API_URL ?? "";
+
 /**
  * Página de retorno do fluxo OAuth2 — Authorization Code Flow com PKCE.
  *
@@ -87,7 +89,7 @@ export default function OAuthCallback() {
     });
 
     axios
-      .post("/api/auth/outlook/callback", payload, {
+      .post(`${BASE}/api/auth/outlook/callback`, payload, {
         headers: { Authorization: `Bearer ${authToken}` },
       })
       .then((res) => {
