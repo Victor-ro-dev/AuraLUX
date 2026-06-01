@@ -3,6 +3,10 @@ import { useAuth } from "../contexts/AuthContext";
 import { generatePKCE, storePKCE } from "../utils/pkce";
 import axios from "axios";
 
+const BASE = import.meta.env.VITE_API_URL
+  ? import.meta.env.VITE_API_URL
+  : "";
+
 export function useOutlook() {
   const { user } = useAuth();
   const [connected, setConnected] = useState(
@@ -29,7 +33,7 @@ export function useOutlook() {
       console.log("[useOutlook] Token guardado em localStorage para callback");
 
       // 3. Obter URL de autorização com code_challenge
-      const { data } = await axios.get("/api/auth/outlook/url", {
+      const { data } = await axios.get(`${BASE}/api/auth/outlook/url`, {
         headers: authHeaders,
         params: { code_challenge: pkce.codeChallenge },
       });
@@ -42,7 +46,7 @@ export function useOutlook() {
 
   /** Remove os tokens do banco e atualiza o estado local. */
   const disconnect = useCallback(async () => {
-    await axios.delete("/api/auth/outlook/disconnect", {
+    await axios.delete(`${BASE}/api/auth/outlook/disconnect`, {
       headers: authHeaders,
     });
     localStorage.removeItem("outlook_connected");
@@ -60,7 +64,7 @@ export function useOutlook() {
   const fetchEvents = useCallback(async () => {
     try {
       console.log("[useOutlook] Buscando eventos...");
-      const { data } = await axios.get("/api/calendar/events", {
+      const { data } = await axios.get(`${BASE}/api/calendar/events`, {
         headers: authHeaders,
       });
       console.log("[useOutlook] ✓ Eventos recebidos:", data.events);
@@ -79,7 +83,7 @@ export function useOutlook() {
   const syncLight = useCallback(async () => {
     setSyncing(true);
     try {
-      const { data } = await axios.post("/api/calendar/sync-light", null, {
+      const { data } = await axios.post(`${BASE}/api/calendar/sync-light`, null, {
         headers: authHeaders,
       });
       return data;

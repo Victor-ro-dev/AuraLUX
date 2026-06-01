@@ -7,6 +7,8 @@ import OutlookCard from "../components/OutlookCard";
 import axios from "axios";
 import "../styles/Dashboard.css";
 
+const BASE = import.meta.env.VITE_API_URL ?? "";
+
 const CHRONOTYPE_LABELS = {
   morning: "Matutino",
   evening: "Vespertino",
@@ -129,7 +131,7 @@ export default function Dashboard() {
   const startSimulation = async () => {
     setIsSimulating(true);
     try {
-      const response = await axios.get("/api/calendar/simulate-timeline", {
+      const response = await axios.get(`${BASE}/api/calendar/simulate-timeline`, {
         params: {
           chronotype: chronotypeSimulation,
           snapshots: 24,

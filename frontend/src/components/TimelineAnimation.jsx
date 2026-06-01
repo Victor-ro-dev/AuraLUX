@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
+const BASE = import.meta.env.VITE_API_URL ?? "";
+
 export default function TimelineAnimation() {
   const [chronotype, setChronotype] = useState("morning");
   const [isPlaying, setIsPlaying] = useState(false);
@@ -12,7 +14,7 @@ export default function TimelineAnimation() {
   const startAnimation = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("/api/calendar/simulate-timeline", {
+      const response = await axios.get(`${BASE}/api/calendar/simulate-timeline`, {
         params: {
           chronotype: chronotype,
           snapshots: 24,

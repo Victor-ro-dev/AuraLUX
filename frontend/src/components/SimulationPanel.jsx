@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
+const BASE = import.meta.env.VITE_API_URL ?? "";
+
 export default function SimulationPanel() {
   const [mode, setMode] = useState("production"); // 'production' | 'simulation'
   const [chronotype, setChronotype] = useState("morning");
@@ -27,7 +29,7 @@ export default function SimulationPanel() {
       });
       if (eventType) params.append("event_type", eventType);
 
-      const response = await axios.get(`/api/calendar/simulate?${params}`, {
+      const response = await axios.get(`${BASE}/api/calendar/simulate?${params}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("auralux_token")}`,
         },
@@ -44,7 +46,7 @@ export default function SimulationPanel() {
   const startTimelineAnimation = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("/api/calendar/simulate-timeline", {
+      const response = await axios.get(`${BASE}/api/calendar/simulate-timeline`, {
         params: {
           chronotype: chronotype,
           snapshots: 24,
