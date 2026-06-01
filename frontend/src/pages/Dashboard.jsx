@@ -678,11 +678,16 @@ export default function Dashboard() {
                   <div className="history-label">{item.label || "—"}</div>
                   <div className="history-meta">
                     {item.triggered_by.toUpperCase()} ·{" "}
-                    {new Date(item.created_at).toLocaleDateString("pt-BR", {
-                      day: "2-digit",
-                      month: "2-digit",
-                    })}{" "}
-                    {new Date(item.created_at).toLocaleTimeString("pt-BR")}
+                    {new Date(item.created_at + "Z").toLocaleDateString(
+                      "pt-BR",
+                      {
+                        day: "2-digit",
+                        month: "2-digit",
+                      },
+                    )}{" "}
+                    {new Date(item.created_at + "Z").toLocaleTimeString(
+                      "pt-BR",
+                    )}
                   </div>
                 </div>
               </div>

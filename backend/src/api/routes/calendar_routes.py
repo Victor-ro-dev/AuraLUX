@@ -8,6 +8,9 @@ from src.services.outlook_oauth_service import OutlookOAuthService
 from src.services.dependencies.auth_dependencies import get_current_user
 from src.utils.chronobiology.color_calculator import calculate_light_command
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
+TZ_BRAZIL = ZoneInfo("America/Sao_Paulo")
 
 router = APIRouter()
 
@@ -150,7 +153,7 @@ def sync_light_immediately(
 
     return {
         "trigger": "manual (sync-light-now)",
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(TZ_BRAZIL).isoformat(),
         "auto_mode_active": auto_mode_active,
         "current_event": current_event,
         "agent_evaluation": {
