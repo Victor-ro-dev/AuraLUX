@@ -18,6 +18,10 @@ class PowerSchema(BaseModel):
     state: bool
 
 
+class AutoLightSchema(BaseModel):
+    current_mode: str = Field(default="auto", description="'manual' ou 'auto' - estado atual do botão")
+
+
 class LightCommandResponseSchema(BaseModel):
     r: int
     g: int

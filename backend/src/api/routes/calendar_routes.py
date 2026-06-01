@@ -50,14 +50,119 @@ def sync_light_from_calendar(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Lê o evento atual do Outlook e ajusta a luz automaticamente."""
+    """
+    Agente de iluminação automática via calendário Outlook + IA (Gemini).
+
+    - Lê o evento atual do Outlook
+    - Classifica usando IA (com fallback para keywords)
+    - Avalia o melhor preset de iluminação
+    - Aplica a luz no ESP32 **somente** se o usuário estiver no modo automático
+    - Retorna a avaliação completa independente do modo
+    """
     token = _get_outlook_token(current_user, db)
     cal_service = CalendarService()
     events = cal_service.get_current_events(token)
-    event_type = cal_service.classify_event(events[0]["subject"]) if events else None
 
-    command = LightService(db).apply_auto_light(current_user.id, event_type)
-    return {"command": command, "event_type": event_type}
+    # Classificação com IA
+    if events:
+        current_event = events[0]
+        classification = cal_service.classify_event_with_ai(
+            current_event["subject"],
+            current_event.get("description", "")
+        )
+    else:
+        current_event = None
+        classification = {
+            "event_type": None,
+            "preset": "circadian",
+            "label": "Fase Circadiana",
+            "reason": "Nenhum evento ativo no momento → usando fase circadiana do horário",
+            "model": "default",
+        }
+
+    # Avaliação do agente: sempre aplica quando sync-light é chamado
+    # (sync_light tem prioridade sobre auto/manual mas não sobre scheduler_ai)
+    command = None
+
+    if current_user.auto_light_mode or True:  # Sempre aplica em sync-light
+        command = LightService(db).apply_sync_light(
+            current_user.id,
+            classification["event_type"],
+        )
+
+    return {
+        "auto_mode_active": bool(current_user.auto_light_mode),
+        "current_event": current_event,
+        "agent_evaluation": {
+            "event_type": classification["event_type"],
+            "recommended_preset": classification["preset"],
+            "label": classification["label"],
+            "reason": classification["reason"],
+            "model_used": classification.get("model", "unknown"),
+        },
+        "light_applied": True,
+        "command": command,
+        "message": "Luz atualizada via botão 'Sincronizar' (prioridade 2)",
+    }
+
+
+@router.post("/sync-light-now")
+def sync_light_immediately(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Força reavaliação IMEDIATA da iluminação (sem esperar scheduler de 5 min).
+
+    Use quando:
+    - Acaba de criar um novo evento no Outlook
+    - Quer atualizar a luz AGORA sem esperar o scheduler
+    - Quer feedback imediato do agente
+    """
+    token = _get_outlook_token(current_user, db)
+    cal_service = CalendarService()
+    events = cal_service.get_current_events(token)
+
+    if events:
+        current_event = events[0]
+        classification = cal_service.classify_event_with_ai(
+            current_event["subject"],
+            current_event.get("description", "")
+        )
+    else:
+        current_event = None
+        classification = {
+            "event_type": None,
+            "preset": "circadian",
+            "label": "Fase Circadiana",
+            "reason": "Nenhum evento ativo no momento",
+            "model": "default",
+        }
+
+    auto_mode_active = bool(current_user.auto_light_mode)
+    command = None
+
+    if auto_mode_active:
+        command = LightService(db).apply_auto_light(
+            current_user.id,
+            classification["event_type"],
+        )
+
+    return {
+        "trigger": "manual (sync-light-now)",
+        "timestamp": datetime.now().isoformat(),
+        "auto_mode_active": auto_mode_active,
+        "current_event": current_event,
+        "agent_evaluation": {
+            "event_type": classification["event_type"],
+            "recommended_preset": classification["preset"],
+            "label": classification["label"],
+            "reason": classification["reason"],
+            "model_used": classification.get("model", "unknown"),
+        },
+        "light_applied": auto_mode_active,
+        "command": command,
+    }
 
 
 @router.get("/simulate")
@@ -221,3 +326,41 @@ def simulate_timeline(
             18: "reading - Leitura"
         }
     }
+
+
+@router.get("/scheduler-status")
+def get_scheduler_status(current_user: User = Depends(get_current_user)):
+    """
+    Status do scheduler automático (DEBUG).
+
+    Retorna:
+    - is_running: se scheduler está rodando
+    - interval_minutes: intervalo de verificação (1 min)
+    - description: descrição do que faz
+    """
+    from src.services.scheduler_service import get_scheduler
+
+    scheduler = get_scheduler()
+
+    return {
+        "is_running": scheduler.is_running,
+        "interval_minutes": 1,
+        "description": "Verifica mudanças no calendário Outlook a cada 1 minuto - AUTOMÁTICO",
+        "jobs": [
+            {
+                "id": job.id,
+                "name": job.name,
+                "next_run_time": str(job.next_run_time) if job.next_run_time else "nunca",
+            }
+            for job in scheduler.scheduler.get_jobs()
+        ] if scheduler.is_running else [],
+        "what_it_does": {
+            "1": "Busca todos os usuários com auto_light_mode=true",
+            "2": "Para cada usuário, verifica evento atual no Outlook",
+            "3": "Classifica o evento (focus/meeting/relax) com IA",
+            "4": "Aplica a luz mais apropriada no ESP32",
+        },
+        "user_mode": f"auto_light_mode={'ativado' if current_user.auto_light_mode else 'desativado'}"
+    }
+
+

@@ -12,6 +12,8 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional
 import pytz
 
+from src.services.ai_classification_service import get_ai_classification_service
+
 
 GRAPH_BASE = "https://graph.microsoft.com/v1.0"
 
@@ -73,19 +75,28 @@ class CalendarService:
             return []
 
     def get_current_events(self, access_token: str) -> list:
-        """Retorna eventos que estão ocorrendo agora."""
-        now = datetime.now(timezone.utc)
-        start = now.isoformat()
-        end = (now + timedelta(minutes=1)).isoformat()
+        """Retorna eventos que estão ocorrendo agora em Brasília."""
+        # Usar timezone de Brasília para referência
+        brasilia_tz = pytz.timezone("America/Sao_Paulo")
+        now_brasilia = datetime.now(brasilia_tz)
+        
+        # Converter para UTC para a query (Graph API funciona melhor com UTC)
+        now_utc = now_brasilia.astimezone(timezone.utc)
+        end_utc = now_utc + timedelta(minutes=1)
+        
+        start_iso = now_utc.isoformat()
+        end_iso = end_utc.isoformat()
+
+        print(f"[CalendarService] 🔍 get_current_events: {now_brasilia.strftime('%H:%M:%S')} (Brasília) → query UTC: {now_utc.strftime('%H:%M:%S')} a {end_utc.strftime('%H:%M:%S')}")
 
         headers = {
             "Authorization": f"Bearer {access_token}",
-            "Prefer": 'outlook.timezone="UTC"',
+            "Prefer": 'outlook.timezone="America/Sao_Paulo"',
         }
         params = {
-            "startDateTime": start,
-            "endDateTime": end,
-            "$select": "subject,start,end",
+            "startDateTime": start_iso,
+            "endDateTime": end_iso,
+            "$select": "subject,start,end,bodyPreview",
             "$top": 5,
             "$orderby": "start/dateTime",
         }
@@ -97,16 +108,31 @@ class CalendarService:
                 timeout=10,
             )
             if response.status_code != 200:
+                print(f"[CalendarService] ✗ Graph API retornou {response.status_code}: {response.text[:200]}")
                 return []
+            
+            events = response.json().get("value", [])
+            
+            if events:
+                for evt in events:
+                    subj = evt.get('subject', '?')
+                    s = evt.get('start', {}).get('dateTime', '?')
+                    e = evt.get('end', {}).get('dateTime', '?')
+                    print(f"[CalendarService] ✓ Evento AGORA: '{subj}' ({s} → {e})")
+            else:
+                print(f"[CalendarService] ℹ️ Nenhum evento no intervalo atual")
+            
             return [
                 {
                     "subject": e.get("subject", ""),
                     "start": e.get("start", {}).get("dateTime", ""),
                     "end": e.get("end", {}).get("dateTime", ""),
+                    "description": e.get("bodyPreview", ""),
                 }
-                for e in response.json().get("value", [])
+                for e in events
             ]
-        except Exception:
+        except Exception as exc:
+            print(f"[CalendarService] ✗ Erro em get_current_events: {exc}")
             return []
 
     def get_upcoming_events(self, access_token: str, hours: int = 24) -> list:
@@ -215,3 +241,56 @@ class CalendarService:
             if keyword in subject_lower:
                 return "relax"
         return None
+
+    def classify_event_detailed(self, subject: str) -> dict:
+        """
+        Classifica o evento e retorna avaliação completa para o agente de iluminação.
+
+        Returns:
+            {
+                "event_type": str | None,
+                "preset": str,
+                "label": str,
+                "reason": str,
+            }
+        """
+        PRESET_INFO = {
+            "focus":   {"preset": "deep_focus", "label": "Foco Profundo", "reason": "Evento de foco/concentração detectado → luz fria e estimulante (6500K)"},
+            "meeting": {"preset": "meeting",    "label": "Reunião",       "reason": "Evento de reunião detectado → luz neutra e acolhedora (4000K)"},
+            "relax":   {"preset": "relax",      "label": "Relaxamento",   "reason": "Evento de pausa/relaxamento detectado → luz âmbar suave (2700K)"},
+        }
+
+        event_type = self.classify_event(subject)
+
+        if event_type and event_type in PRESET_INFO:
+            info = PRESET_INFO[event_type]
+            return {
+                "event_type": event_type,
+                "preset": info["preset"],
+                "label": info["label"],
+                "reason": info["reason"],
+            }
+
+        return {
+            "event_type": None,
+            "preset": "circadian",
+            "label": "Fase Circadiana",
+            "reason": f"Evento '{subject}' sem palavras-chave reconhecidas → usando fase circadiana do horário",
+        }
+
+    def classify_event_with_ai(self, subject: str, description: str = "") -> dict:
+        """
+        Classifica o evento usando IA (Gemini) com fallback para keywords.
+
+        Returns:
+            {
+                "event_type": str | None,
+                "preset": str,
+                "label": str,
+                "cct": int | None,
+                "reason": str,
+                "model": "gemini" | "fallback",
+            }
+        """
+        ai_service = get_ai_classification_service()
+        return ai_service.classify_event(subject, description)

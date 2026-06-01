@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from src.core.settings.database import get_db
-from src.core.schemas.user_schemas import UserResponseSchema, ChronotypeUpdateSchema
+from src.core.schemas.user_schemas import UserResponseSchema, ChronotypeUpdateSchema, AutoLightModeSchema
 from src.core.entities.user import User
 from src.services.user_service import UserService
 from src.services.dependencies.auth_dependencies import get_current_user
@@ -27,3 +27,13 @@ def update_chronotype(
         body.sleep_time,
         body.device_id,
     )
+
+
+@router.patch("/me/auto-light", response_model=UserResponseSchema)
+def set_auto_light_mode(
+    body: AutoLightModeSchema,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Ativa ou desativa o modo automático de iluminação via calendário."""
+    return UserService(db).set_auto_light_mode(current_user.id, body.auto_light_mode)

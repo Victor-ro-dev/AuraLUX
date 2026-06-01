@@ -31,3 +31,12 @@ class UserService:
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuário não encontrado")
         return user
+
+    def set_auto_light_mode(self, user_id: str, enabled: bool):
+        user = self.repo.find_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuário não encontrado")
+        user.auto_light_mode = enabled
+        self.repo.db.commit()
+        self.repo.db.refresh(user)
+        return user

@@ -16,6 +16,10 @@ class ChronotypeUpdateSchema(BaseModel):
     device_id: Optional[str] = None    # ID do ESP32
 
 
+class AutoLightModeSchema(BaseModel):
+    auto_light_mode: bool
+
+
 class UserResponseSchema(BaseModel):
     id: str
     name: str
@@ -24,6 +28,7 @@ class UserResponseSchema(BaseModel):
     device_id: Optional[str] = None
     wake_time: Optional[str] = None
     sleep_time: Optional[str] = None
+    auto_light_mode: bool = False
     created_at: datetime
 
     class Config:
