@@ -67,7 +67,6 @@ class OutlookOAuthService:
         resp = requests.post(
             f"{AUTHORITY}/token",
             data=data,
-            headers={"Origin": "http://localhost:5173"},  # Necessário para SPAs
             timeout=15,
         )
         print(f"[exchange_code] Resposta Microsoft: {resp.status_code}")
