@@ -308,6 +308,33 @@ input[type='range'].b-slider {
     box-shadow: 0 0 16px rgba(0, 229, 255, 0.2);
 }
 
+/* ── Sync Light Button (Menor) ── */
+.sync-btn {
+    width: 60%;
+    padding: 0.5rem;
+    background: transparent;
+    border: 1px solid var(--cyan);
+    border-radius: 8px;
+    color: var(--cyan);
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+    margin: 0.5rem auto 0;
+    display: block;
+}
+
+.sync-btn:hover {
+    background: rgba(0, 229, 255, 0.08);
+    box-shadow: 0 0 16px rgba(0, 229, 255, 0.2);
+}
+
+.sync-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 
 /* ── History ── */
 .history-list {

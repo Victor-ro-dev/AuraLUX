@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useLight } from "../hooks/useLight";
@@ -15,6 +15,10 @@ const CHRONOTYPE_LABELS = {
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  // Declarar mode ANTES de usar em useLight
+  const [mode, setMode] = useState("auto"); // 'auto' | 'manual'
+
   const {
     loading,
     currentLight,
@@ -24,14 +28,18 @@ export default function Dashboard() {
     updateBrightness,
     togglePower,
     fetchHistory,
-  } = useLight();
+    syncWithCalendar,
+    disableAutoMode,
+  } = useLight(mode === "manual"); // Passa isManualMode
 
   const [power, setPower] = useState(true);
   const [brightness, setBrightnessLocal] = useState(80);
+
+  const rgbDebounceRef = useRef(null);
+  const brightnessDebounceRef = useRef(null);
   const [rgb, setRgb] = useState({ r: 255, g: 255, b: 240 });
   const [presets, setPresets] = useState([]);
   const [activePreset, setActivePreset] = useState(null);
-  const [mode, setMode] = useState("auto"); // 'auto' | 'manual'
 
   // Estado para simulação 24h
   const [isSimulating, setIsSimulating] = useState(false);
@@ -67,31 +75,54 @@ export default function Dashboard() {
   const handleBrightnessChange = (e) => {
     const val = parseInt(e.target.value);
     setBrightnessLocal(val);
-    updateBrightness(val);
+    clearTimeout(brightnessDebounceRef.current);
+    brightnessDebounceRef.current = setTimeout(() => {
+      updateBrightness(val);
+    }, 300);
   };
 
   const handleRgbChange = (channel, val) => {
     const newRgb = { ...rgb, [channel]: parseInt(val) };
     setRgb(newRgb);
     setActivePreset(null);
-    setMode("manual");
-    applyManual(newRgb.r, newRgb.g, newRgb.b, brightness);
+    if (mode !== "manual") {
+      setMode("manual");
+      disableAutoMode(); // Notifica backend para parar IA background
+    }
+    clearTimeout(rgbDebounceRef.current);
+    rgbDebounceRef.current = setTimeout(() => {
+      applyManual(newRgb.r, newRgb.g, newRgb.b, brightness);
+    }, 300);
   };
 
   const handlePreset = (preset) => {
     setRgb({ r: preset.r, g: preset.g, b: preset.b });
     setActivePreset(preset.key);
-    setMode("manual");
+    if (mode !== "manual") {
+      setMode("manual");
+      disableAutoMode(); // Notifica backend para parar IA background
+    }
     applyManual(preset.r, preset.g, preset.b, brightness);
   };
 
   const handleAutoLight = () => {
-    setMode("auto");
-    setActivePreset(null);
-    applyAuto().then((data) => {
-      if (data) setRgb({ r: data.r, g: data.g, b: data.b });
+    // Sempre enviar "auto" - o botão "Luz Automática" sempre ativa AUTO
+    applyAuto("auto").then((data) => {
+      setMode("auto");
+      setActivePreset(null);
+      if (data.command) {
+        setRgb({ r: data.command.r, g: data.command.g, b: data.command.b });
+      }
     });
     fetchHistory();
+  };
+
+  const handleSyncCalendar = () => {
+    syncWithCalendar().then((data) => {
+      if (data && data.command) {
+        setRgb({ r: data.command.r, g: data.command.g, b: data.command.b });
+      }
+    });
   };
 
   // Simulação 24h
@@ -396,7 +427,10 @@ export default function Dashboard() {
                 AUTO
               </button>
               <button
-                onClick={() => setMode("manual")}
+                onClick={() => {
+                  setMode("manual");
+                  disableAutoMode(); // Notifica backend para parar IA background
+                }}
                 disabled={isSimulating}
                 style={{
                   padding: "0.4rem 0.8rem",
@@ -425,18 +459,24 @@ export default function Dashboard() {
 
           {/* Automático */}
           {mode === "auto" && (
-            <button
-              className="auto-btn"
-              onClick={handleAutoLight}
-              disabled={loading || isSimulating}
-              style={{
-                marginTop: "0.5rem",
-                opacity: isSimulating ? 0.5 : 1,
-                cursor: isSimulating ? "not-allowed" : "pointer",
-              }}
-            >
-              ◎ Aplicar Luz Automática (Cronotipo)
-            </button>
+            <>
+              <button
+                className="auto-btn"
+                onClick={handleAutoLight}
+                disabled={loading || isSimulating}
+              >
+                ◎ Luz Automática Aplicada (Cronotipo)
+              </button>
+
+              <button
+                className="sync-btn"
+                onClick={handleSyncCalendar}
+                disabled={loading || isSimulating}
+                title="Verifica calendário e aplica cor da IA"
+              >
+                🔄 Atualizar
+              </button>
+            </>
           )}
 
           {/* Manual Controls */}
@@ -579,7 +619,44 @@ export default function Dashboard() {
 
         {/* Card: Histórico */}
         <div className="dash-card">
-          <div className="dash-card-title">Histórico de Comandos</div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: "0.9rem",
+            }}
+          >
+            <div className="dash-card-title" style={{ margin: 0 }}>
+              Histórico de Comandos
+            </div>
+            <button
+              onClick={fetchHistory}
+              disabled={loading}
+              style={{
+                background: "none",
+                border: "1px solid var(--border)",
+                color: "var(--text-secondary)",
+                fontSize: "0.72rem",
+                letterSpacing: "1px",
+                cursor: "pointer",
+                padding: "0.3rem 0.6rem",
+                borderRadius: "4px",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.borderColor = "var(--cyan)";
+                e.target.style.color = "var(--cyan)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.borderColor = "var(--border)";
+                e.target.style.color = "var(--text-secondary)";
+              }}
+              title="Atualizar histórico"
+            >
+              🔄 Atualizar
+            </button>
+          </div>
           <div className="history-list">
             {history.length === 0 && (
               <span style={{ color: "var(--text-dim)", fontSize: "0.8rem" }}>
@@ -596,6 +673,10 @@ export default function Dashboard() {
                   <div className="history-label">{item.label || "—"}</div>
                   <div className="history-meta">
                     {item.triggered_by.toUpperCase()} ·{" "}
+                    {new Date(item.created_at).toLocaleDateString("pt-BR", {
+                      day: "2-digit",
+                      month: "2-digit",
+                    })}{" "}
                     {new Date(item.created_at).toLocaleTimeString("pt-BR")}
                   </div>
                 </div>

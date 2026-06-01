@@ -1,6 +1,9 @@
 import axios from "axios";
 
-const api = axios.create({ baseURL: "/api" });
+const BASE = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : "/api";
+const api = axios.create({ baseURL: BASE });
 
 const authHeader = (token) => ({
   headers: { Authorization: `Bearer ${token}` },
@@ -9,12 +12,9 @@ const authHeader = (token) => ({
 export const getPresets = (token) =>
   api.get("/light/presets", authHeader(token)).then((r) => r.data);
 
-export const applyAutoLight = (token, eventType = null) =>
+export const applyAutoLight = (token, currentMode = "auto") =>
   api
-    .post("/light/auto", null, {
-      ...authHeader(token),
-      params: eventType ? { event_type: eventType } : {},
-    })
+    .post("/light/auto", { current_mode: currentMode }, authHeader(token))
     .then((r) => r.data);
 
 export const applyManualLight = (token, payload) =>
@@ -31,4 +31,16 @@ export const setPower = (token, state) =>
 export const getLightHistory = (token, limit = 10) =>
   api
     .get("/light/history", { ...authHeader(token), params: { limit } })
+    .then((r) => r.data);
+
+export const syncLightFromCalendar = (token) =>
+  api.post("/calendar/sync-light", {}, authHeader(token)).then((r) => r.data);
+
+export const setAutoLightMode = (token, enabled) =>
+  api
+    .patch(
+      "/users/me/auto-light",
+      { auto_light_mode: enabled },
+      authHeader(token),
+    )
     .then((r) => r.data);
