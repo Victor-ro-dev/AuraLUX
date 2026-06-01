@@ -47,22 +47,21 @@ class OutlookOAuthService:
         print(f"[exchange_code] Code: {code[:20]}...")
         print(f"[exchange_code] Code Verifier: {code_verifier[:20] if code_verifier else 'NONE'}...")
         
+        # Cliente confidencial: client_secret SEMPRE necessário (mesmo com PKCE)
         data = {
             "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
             "code": code,
             "redirect_uri": REDIRECT_URI,
             "grant_type": "authorization_code",
+            "scope": SCOPES,
         }
         
-        # Se usar PKCE, NÃO enviar client_secret (Azure rejeita em public clients)
         if code_verifier:
             data["code_verifier"] = code_verifier
-            print(f"[exchange_code] PKCE habilitado: code_verifier adicionado, client_secret REMOVIDO")
-        else:
-            # Só usar client_secret se NÃO estiver usando PKCE
-            data["client_secret"] = CLIENT_SECRET
-            data["scope"] = SCOPES
-            print(f"[exchange_code] Fluxo confidencial: client_secret adicionado")
+            print(f"[exchange_code] PKCE habilitado: code_verifier adicionado")
+        
+        print(f"[exchange_code] Fluxo confidencial: client_secret incluído")
         
         print(f"[exchange_code] Enviando requisição ao Microsoft: {AUTHORITY}/token")
         resp = requests.post(
