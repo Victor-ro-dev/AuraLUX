@@ -35,7 +35,7 @@ export default function OutlookCard() {
 
   return (
     <div className="dash-card">
-      <div className="dash-card-title">Outlook Calendar</div>
+      <div className="dash-card-title">Calendário Outlook</div>
 
       {!isConnected ? (
         <div style={{ textAlign: "center" }}>

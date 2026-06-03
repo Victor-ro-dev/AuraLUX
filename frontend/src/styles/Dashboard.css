@@ -308,30 +308,32 @@ input[type='range'].b-slider {
     box-shadow: 0 0 16px rgba(0, 229, 255, 0.2);
 }
 
-/* ── Sync Light Button (Menor) ── */
-.sync-btn {
-    width: 60%;
-    padding: 0.5rem;
+/* ── Botão Secundário / Ação ── */
+.dash-btn-secondary {
     background: transparent;
-    border: 1px solid var(--cyan);
-    border-radius: 8px;
-    color: var(--cyan);
-    font-family: 'Orbitron', monospace;
-    font-size: 0.65rem;
-    letter-spacing: 1.5px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 1px;
+    padding: 0.35rem 0.7rem;
     cursor: pointer;
-    transition: background 0.2s, box-shadow 0.2s;
-    margin: 0.5rem auto 0;
-    display: block;
+    transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
 }
 
-.sync-btn:hover {
-    background: rgba(0, 229, 255, 0.08);
-    box-shadow: 0 0 16px rgba(0, 229, 255, 0.2);
+.dash-btn-secondary:hover:not(:disabled) {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
 }
 
-.sync-btn:disabled {
-    opacity: 0.5;
+.dash-btn-secondary:disabled {
+    opacity: 0.4;
     cursor: not-allowed;
 }
 

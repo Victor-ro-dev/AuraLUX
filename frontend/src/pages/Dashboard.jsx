@@ -202,51 +202,6 @@ export default function Dashboard() {
       <div className="dash-header">
         <div className="dash-brand">AuraLUX</div>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          {/* Toggle Simulação 24h */}
-          <button
-            style={{
-              padding: "8px 16px",
-              backgroundColor: isSimulating ? "#ff6b6b" : "#4a9eff",
-              color: "#000",
-              border: "none",
-              borderRadius: "6px",
-              fontWeight: "bold",
-              cursor: "pointer",
-              fontSize: "13px",
-              transition: "all 0.2s",
-            }}
-            onClick={() => {
-              if (isSimulating) {
-                setIsSimulating(false);
-              } else {
-                startSimulation();
-              }
-            }}
-          >
-            {isSimulating ? "⏸️ Parar Simulação" : "▶️ Simular 24h"}
-          </button>
-
-          {/* Seletor de Cronotipo para Simulação */}
-          {isSimulating && (
-            <select
-              value={chronotypeSimulation}
-              onChange={(e) => setChronotypeSimulation(e.target.value)}
-              disabled={isSimulating}
-              style={{
-                padding: "6px 10px",
-                backgroundColor: "#2a2a2a",
-                color: "#fff",
-                border: "1px solid #444",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontSize: "12px",
-              }}
-            >
-              <option value="morning">Matutino</option>
-              <option value="evening">Vespertino</option>
-            </select>
-          )}
-
           <div className="dash-user-info">
             <span className="dash-user-name">{user?.name}</span>
             <span className="dash-user-type">
@@ -473,14 +428,16 @@ export default function Dashboard() {
                 ◎ Luz Automática Aplicada (Cronotipo)
               </button>
 
-              <button
-                className="sync-btn"
-                onClick={handleSyncCalendar}
-                disabled={loading || isSimulating}
-                title="Verifica calendário e aplica cor da IA"
-              >
-                🔄 Atualizar
-              </button>
+              <div style={{ display: "flex", justifyContent: "center", marginTop: "0.8rem" }}>
+                <button
+                  className="dash-btn-secondary"
+                  onClick={handleSyncCalendar}
+                  disabled={loading || isSimulating}
+                  title="Verifica calendário e aplica cor da IA"
+                >
+                  ↻ Atualizar
+                </button>
+              </div>
             </>
           )}
 
@@ -638,28 +595,10 @@ export default function Dashboard() {
             <button
               onClick={fetchHistory}
               disabled={loading}
-              style={{
-                background: "none",
-                border: "1px solid var(--border)",
-                color: "var(--text-secondary)",
-                fontSize: "0.72rem",
-                letterSpacing: "1px",
-                cursor: "pointer",
-                padding: "0.3rem 0.6rem",
-                borderRadius: "4px",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.borderColor = "var(--cyan)";
-                e.target.style.color = "var(--cyan)";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.borderColor = "var(--border)";
-                e.target.style.color = "var(--text-secondary)";
-              }}
+              className="dash-btn-secondary"
               title="Atualizar histórico"
             >
-              🔄 Atualizar
+              ↻ Atualizar
             </button>
           </div>
           <div className="history-list">

@@ -65,6 +65,8 @@
 .auth-field-label {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
     gap: 0.5rem;
     font-size: 0.72rem;
     letter-spacing: 2px;
@@ -92,6 +94,10 @@
 
 .auth-input-wrap {
     position: relative;
+}
+
+.auth-input-wrap .auth-input {
+    padding-right: 2.5rem;
 }
 
 .auth-input {
@@ -189,4 +195,43 @@
 
 .auth-link:hover {
     text-shadow: 0 0 8px var(--cyan-glow);
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 1.8rem 1.2rem;
+        margin: 0.5rem;
+    }
+    .auth-brand {
+        font-size: 1.7rem;
+        letter-spacing: 3px;
+        margin-bottom: 0.2rem;
+    }
+    .auth-subtitle {
+        font-size: 0.72rem;
+        letter-spacing: 2px;
+        margin-bottom: 1.5rem;
+    }
+    .auth-form {
+        gap: 1rem;
+    }
+    .auth-input {
+        padding: 0.65rem 0.85rem;
+        font-size: 0.9rem;
+    }
+    .auth-input-wrap .auth-input {
+        padding-right: 2.3rem;
+    }
+    .auth-btn {
+        padding: 0.75rem;
+        font-size: 0.8rem;
+    }
+    .auth-field-label {
+        font-size: 0.68rem;
+        letter-spacing: 1.5px;
+    }
+    .auth-forgot {
+        font-size: 0.65rem;
+    }
 }

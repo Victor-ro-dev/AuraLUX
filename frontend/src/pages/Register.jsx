@@ -30,15 +30,15 @@ export default function Register() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-brand">AuraLUX</div>
-        <div className="auth-subtitle">Initialize new operator sequence</div>
+        <div className="auth-subtitle">Inicializar nova sequência de operador</div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="auth-field">
-            <label className="auth-label">Operator ID</label>
+            <label className="auth-label">Nome do Operador</label>
             <input
               type="text"
               name="name"
-              placeholder="ENTER_NAME"
+              placeholder="NOME_DO_OPERADOR"
               value={form.name}
               onChange={handleChange}
               className="auth-input"
@@ -47,11 +47,11 @@ export default function Register() {
           </div>
 
           <div className="auth-field">
-            <label className="auth-label">Comms Link</label>
+            <label className="auth-label">E-mail de Comunicação</label>
             <input
               type="email"
               name="email"
-              placeholder="EMAIL_ADDRESS"
+              placeholder="endereco@email.com"
               value={form.email}
               onChange={handleChange}
               className="auth-input"
@@ -60,7 +60,7 @@ export default function Register() {
           </div>
 
           <div className="auth-field">
-            <label className="auth-label">Security Key</label>
+            <label className="auth-label">Chave de Segurança (Senha)</label>
             <input
               type="password"
               name="password"
@@ -73,7 +73,7 @@ export default function Register() {
           </div>
 
           <div className="auth-field">
-            <label className="auth-label">Verify Key</label>
+            <label className="auth-label">Confirmar Chave (Senha)</label>
             <input
               type="password"
               name="confirmPassword"
@@ -93,7 +93,7 @@ export default function Register() {
 
         <p className="auth-switch">
           <Link to="/login" className="auth-link">
-            ← Return to Login
+            ← Voltar para o Login
           </Link>
         </p>
       </div>

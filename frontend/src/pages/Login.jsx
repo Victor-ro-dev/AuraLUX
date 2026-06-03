@@ -23,17 +23,17 @@ export default function Login() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-brand">AuraLUX</div>
-        <div className="auth-subtitle">System Initialization</div>
+        <div className="auth-subtitle">Inicialização do Sistema</div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="auth-field">
             <span className="auth-field-label">
               <span className="auth-field-icon">⬡</span>
-              ID // Email
+              E-mail de Acesso
             </span>
             <input
               type="email"
-              placeholder="admin@esp32.node"
+              placeholder="exemplo@auralux.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="auth-input"
@@ -46,7 +46,7 @@ export default function Login() {
               <span className="auth-field-icon">⊕</span>
               Senha
               <Link to="/forgot" className="auth-forgot">
-                Esqueceu a Chave?
+                Esqueceu a senha?
               </Link>
             </span>
             <div className="auth-input-wrap">
@@ -76,7 +76,7 @@ export default function Login() {
         </form>
 
         <p className="auth-switch">
-          Node não registrado?{" "}
+          Ainda não tem uma conta?{" "}
           <Link to="/register" className="auth-link">
             Criar conta
           </Link>
